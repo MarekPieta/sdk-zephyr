@@ -753,6 +753,7 @@ static void db_hash_process(struct k_work *work)
 		BT_HEXDUMP_DBG(db_hash.hash, sizeof(db_hash.hash),
 			       "New Hash: ");
 
+		LOG_ERR("GATT database was modified, update needed");
 		/* GATT database has been modified since last boot, likely due
 		 * to a firmware update or a dynamic service that was not
 		 * re-registered on boot.
@@ -2469,11 +2470,20 @@ static void sc_restore_rsp(struct bt_conn *conn,
 	 * The client receives and confirms a Service Changed indication.
 	 */
 	cfg = find_cf_cfg(conn);
+
 	if (cfg && CF_ROBUST_CACHING(cfg)) {
 		atomic_set_bit(cfg->flags, CF_CHANGE_AWARE);
 		BT_DBG("%s change-aware", bt_addr_le_str(&cfg->peer));
 	}
 #endif
+
+	struct gatt_sc_cfg *sc_cfg = find_sc_cfg(conn->id, &conn->le.dst);
+
+	if (sc_cfg) {
+		LOG_ERR("Cleaning up config data of SC");
+		/* Reset config data */
+		sc_reset(sc_cfg);
+	}
 }
 
 static struct bt_gatt_indicate_params sc_restore_params[CONFIG_BT_MAX_CONN];
@@ -2508,10 +2518,9 @@ static void sc_restore(struct bt_conn *conn)
 
 	if (bt_gatt_indicate(conn, &sc_restore_params[index])) {
 		BT_ERR("SC restore indication failed");
+	} else {
+		LOG_ERR("Restored SC Config");
 	}
-
-	/* Reset config data */
-	sc_reset(cfg);
 }
 
 struct conn_data {
@@ -2571,10 +2580,16 @@ static uint8_t update_ccc(const struct bt_gatt_attr *attr, uint16_t handle,
 		}
 
 		gatt_ccc_changed(attr, ccc);
+		LOG_ERR("CCC changed");
 
 		if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED) &&
 		    ccc == &sc_ccc) {
-			sc_restore(conn);
+			LOG_ERR("SC restore security l: %d", bt_conn_get_security(conn));
+
+			if (bt_conn_get_security(conn) >= BT_SECURITY_L2) {
+				LOG_ERR("SC restore triggered");
+				sc_restore(conn);
+			}
 		}
 
 		return BT_GATT_ITER_CONTINUE;
@@ -4861,6 +4876,7 @@ static int ccc_set_direct(const char *key, size_t len, settings_read_cb read_cb,
 void bt_gatt_connected(struct bt_conn *conn)
 {
 	struct conn_data data;
+	LOG_ERR("BT GATT connected");
 
 	BT_DBG("conn %p", conn);
 
@@ -4885,8 +4901,6 @@ void bt_gatt_connected(struct bt_conn *conn)
 
 		settings_load_subtree_direct(key, ccc_set_direct, (void *)key);
 	}
-
-	bt_gatt_foreach_attr(0x0001, 0xffff, update_ccc, &data);
 
 	/* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part C page 2192:
 	 *
@@ -4934,12 +4948,16 @@ void bt_gatt_att_max_mtu_changed(struct bt_conn *conn, uint16_t tx, uint16_t rx)
 
 void bt_gatt_encrypt_change(struct bt_conn *conn)
 {
+	LOG_ERR("BT GATT encrypted");
+
 	struct conn_data data;
 
 	BT_DBG("conn %p", conn);
 
 	data.conn = conn;
 	data.sec = BT_SECURITY_L1;
+
+	LOG_ERR("Now security after encrypt change: %d", bt_conn_get_security(conn));
 
 	bt_gatt_foreach_attr(0x0001, 0xffff, update_ccc, &data);
 }
