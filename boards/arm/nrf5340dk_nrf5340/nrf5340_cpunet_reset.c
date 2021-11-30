@@ -44,6 +44,8 @@ static void remoteproc_mgr_config(void)
 	NRF_P0->PIN_CNF[CPUNET_UARTE_PIN_CTS] =
 		GPIO_PIN_CNF_MCUSEL_NetworkMCU << GPIO_PIN_CNF_MCUSEL_Pos;
 
+	NRF_P0->PIN_CNF[26] = GPIO_PIN_CNF_MCUSEL_NetworkMCU << GPIO_PIN_CNF_MCUSEL_Pos;
+
 	/* Route Bluetooth Controller Debug Pins */
 	DEBUG_SETUP();
 

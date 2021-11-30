@@ -65,6 +65,7 @@ static void enable_cpunet(void)
 				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* RX_EN */
 	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, mode_gpios),
 				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* MODE */
+	nrf_gpio_pin_mcu_select(8, GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* nPM PWM mode */
 
 	/* Retain nRF5340 Network MCU in Secure domain (bus
 	 * accesses by Network MCU will have Secure attribute set).
