@@ -55,14 +55,42 @@ BUILD_ASSERT(CONFIG_THINGY53_INIT_PRIORITY < CONFIG_SENSOR_INIT_PRIORITY,
 
 static void enable_cpunet(void)
 {
+
+	const struct device *gpio_dev_tx = device_get_binding("GPIO_0");
+	const struct device *gpio_dev_rx = device_get_binding("GPIO_1");
+
+	if (!gpio_dev_tx || !gpio_dev_rx) {
+		__ASSERT_NO_MSG(false);
+	}
+
+	int err = gpio_pin_configure(gpio_dev_tx, 30, GPIO_OUTPUT);
+
+	if (!err) {
+		err = gpio_pin_configure(gpio_dev_rx, 11, GPIO_OUTPUT);
+	}
+
+	if (err) {
+		__ASSERT_NO_MSG(false);
+	}
+
+	err = gpio_pin_set_raw(gpio_dev_tx, 30, 0);
+
+	if (!err) {
+		err = gpio_pin_set_raw(gpio_dev_rx, 11, 0);
+	}
+
+	if (err) {
+		__ASSERT_NO_MSG(false);
+	}
+
 #if !defined(CONFIG_TRUSTED_EXECUTION_NONSECURE)
 	/* Give nRF21540fem control pins to NetworkMCU */
-	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, tx_en_gpios),
-				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* TX_EN */
+//	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, tx_en_gpios),
+//				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* TX_EN */
 	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, pdn_gpios),
 				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* PDN */
-	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, rx_en_gpios),
-				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* RX_EN */
+//	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, rx_en_gpios),
+//				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* RX_EN */
 	nrf_gpio_pin_mcu_select(NRF_DT_GPIOS_TO_PSEL(NRF21540FEM_CTRL_NODE, mode_gpios),
 				GPIO_PIN_CNF_MCUSEL_NetworkMCU); /* MODE */
 
