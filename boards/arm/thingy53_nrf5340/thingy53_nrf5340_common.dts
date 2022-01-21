@@ -59,6 +59,11 @@
 		};
 	};
 
+	npm1100_mode {
+		compatible = "nordic,thingy53-npm1100_mode";
+		gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+	};
+
 	vbatt {
 		compatible = "voltage-divider";
 		io-channels = <&adc 2>;

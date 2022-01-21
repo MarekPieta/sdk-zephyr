@@ -86,6 +86,13 @@ config DOMAIN_CPUNET_BOARD
 	  another board. For example hci_rpmsg on the nRF5340_cpunet for
 	  Bluetooth applications.
 
+config THINGY53_PMIC_PWM_MODE
+	bool "Set PMIC to PWM mode"
+	help
+	  This option sets PIMIC PWM MODE. It should be set on thingy53
+	  in case accelerometer measurements are being conducted. Without
+	  setting it you will get noises on accelerometer measurements.
+
 endif # BOARD_THINGY53_NRF5340_CPUAPP || BOARD_THINGY53_NRF5340_CPUAPP_NS
 
 if BOARD_THINGY53_NRF5340_CPUNET

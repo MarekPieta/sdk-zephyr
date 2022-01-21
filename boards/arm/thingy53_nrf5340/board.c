@@ -23,6 +23,7 @@ LOG_MODULE_REGISTER(thingy53_board_init);
 #define BMI270_CS			DT_SPI_DEV_CS_GPIOS_PIN(BMI270_NODE)
 #define BMI270_FLAGS			DT_SPI_DEV_CS_GPIOS_FLAGS(BMI270_NODE)
 
+
 /* Initialization chain of Thingy:53 board requires some delays before on board sensors
  * could be accessed after power up. In particular bme680 and bmm150 sensors require,
  * respectively 2ms and 1ms power on delay. In order to avoid delays sum, common delay is
@@ -66,11 +67,35 @@ static void enable_cpunet(void)
 	LOG_DBG("Network MCU released.");
 #endif /* !CONFIG_TRUSTED_EXECUTION_SECURE */
 }
+static int pwm_mode_control_init(void)
+{
+	int err = 0;
+	const struct gpio_dt_spec signal = GPIO_DT_SPEC_GET(DT_PATH(npm1100_mode), gpios);
+
+	err = device_is_ready(signal.port);
+	if (err) {
+		LOG_ERR("GPIO device %s is not ready", signal.port->name);
+		return err;
+	}
+
+	err = gpio_pin_configure_dt(&signal, GPIO_OUTPUT_ACTIVE);
+	if (err) {
+		LOG_ERR("GPIO config failed (err %d)\n", err);
+		return err;
+	}
+
+	return err;
+}
 
 static int setup(const struct device *dev)
 {
 	ARG_UNUSED(dev);
+
 #if !defined(CONFIG_TRUSTED_EXECUTION_SECURE)
+	if (IS_ENABLED(CONFIG_THINGY53_PMIC_PWM_MODE)) {
+		pwm_mode_control_init();
+	}
+
 
 	const struct device *gpio;
 	int err;
