@@ -59,8 +59,9 @@
 		};
 	};
 
-	npm1100_mode {
-		compatible = "nordic,thingy53-npm1100_mode";
+	npm1100_mode: npm1100_mode {
+		compatible = "nordic,thingy53-npm1100-mode";
+		status = "disabled";
 		gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
 	};
 

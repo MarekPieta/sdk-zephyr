@@ -3,7 +3,7 @@
 
 description: GPIO used to set PWM mode on npm1100 GPIO on Thingy:53
 
-compatible: "nordic,thingy53-npm1100_mode"
+compatible: "nordic,thingy53-npm1100-mode"
 
 include: base.yaml
 

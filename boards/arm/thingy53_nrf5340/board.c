@@ -67,10 +67,13 @@ static void enable_cpunet(void)
 	LOG_DBG("Network MCU released.");
 #endif /* !CONFIG_TRUSTED_EXECUTION_SECURE */
 }
+
+
 static int pwm_mode_control_init(void)
 {
 	int err = 0;
-	const struct gpio_dt_spec signal = GPIO_DT_SPEC_GET(DT_PATH(npm1100_mode), gpios);
+	const struct gpio_dt_spec signal = GPIO_DT_SPEC_GET(DT_NODELABEL(npm1100_mode), gpios);
+//	const struct gpio_dt_spec signal = GPIO_DT_SPEC_GET(DT_PATH(npm1100_mode), gpios);
 
 	err = device_is_ready(signal.port);
 	if (err) {
@@ -92,10 +95,10 @@ static int setup(const struct device *dev)
 	ARG_UNUSED(dev);
 
 #if !defined(CONFIG_TRUSTED_EXECUTION_SECURE)
-	if (IS_ENABLED(CONFIG_THINGY53_PMIC_PWM_MODE)) {
+
+	if (DT_NODE_HAS_STATUS(DT_NODELABEL(npm1100_mode), okay)) {
 		pwm_mode_control_init();
 	}
-
 
 	const struct device *gpio;
 	int err;
