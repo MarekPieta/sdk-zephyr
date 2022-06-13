@@ -1358,6 +1358,18 @@ struct bt_conn_auth_info_cb {
  */
 int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb);
 
+/** @brief Register authentication callbacks used only for a given connection.
+ *
+ *  Register callbacks to handle authenticated pairing for a given connection.
+ *  The set of callbacks ovelays globally defined callbacks.
+ *
+ *  @param conn	Connection object.
+ *  @param cb	Callback struct.
+ *
+ *  @return Zero on success or negative error code otherwise
+ */
+int bt_conn_auth_cb_register_conn(struct bt_conn *conn, const struct bt_conn_auth_cb *cb);
+
 /** @brief Register authentication information callbacks.
  *
  *  Register callbacks to get authenticated pairing information. Multiple
