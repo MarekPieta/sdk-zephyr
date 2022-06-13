@@ -1357,6 +1357,16 @@ struct bt_conn_auth_info_cb {
 	sys_snode_t node;
 };
 
+/** @brief Get authentication callbacks.
+ *
+ *  Get registered authentication callbacks for given connection.
+ *
+ *  @param conn Connection object.
+ *
+ *  @return Registered authentication callbacks or NULL if no callbacks were registered.
+ */
+const struct bt_conn_auth_cb *get_auth_cb(const struct bt_conn *conn);
+
 /** @brief Register authentication callbacks.
  *
  *  Register callbacks to handle authenticated pairing. Passing NULL
@@ -1367,6 +1377,18 @@ struct bt_conn_auth_info_cb {
  *  @return Zero on success or negative error code otherwise
  */
 int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb);
+
+/** @brief Register authentication callbacks used only for a given connection.
+ *
+ *  Register callbacks to handle authenticated pairing for a given connection.
+ *  The set of callbacks ovelays globally defined callbacks for given connection.
+ *
+ *  @param conn Connection object.
+ *  @param cb Callback struct.
+ *
+ *  @return Zero on success or negative error code otherwise
+ */
+int bt_conn_auth_cb_register_conn(const struct bt_conn *conn, const struct bt_conn_auth_cb *cb);
 
 /** @brief Register authentication information callbacks.
  *

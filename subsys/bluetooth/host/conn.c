@@ -79,6 +79,7 @@ NET_BUF_POOL_FIXED_DEFINE(frag_pool, CONFIG_BT_L2CAP_TX_FRAG_COUNT,
 
 #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
 const struct bt_conn_auth_cb *bt_auth;
+const struct bt_conn_auth_cb *bt_auth_conn[CONFIG_BT_MAX_CONN];
 sys_slist_t bt_auth_info_cbs = SYS_SLIST_STATIC_INIT(&bt_auth_info_cbs);
 #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR */
 
@@ -2782,6 +2783,13 @@ struct net_buf *bt_conn_create_frag_timeout(size_t reserve, k_timeout_t timeout)
 #endif /* CONFIG_NET_BUF_LOG */
 }
 
+const struct bt_conn_auth_cb *get_auth_cb(const struct bt_conn *conn)
+{
+	const struct bt_conn_auth_cb *conn_auth = bt_auth_conn[bt_conn_index(conn)];
+
+	return (conn_auth) ? (conn_auth) : (bt_auth);
+}
+
 #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
 int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb)
 {
@@ -2810,6 +2818,38 @@ int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb)
 	return 0;
 }
 
+#if defined(CONFIG_BT_SMP)
+int bt_conn_auth_cb_register_conn(const struct bt_conn *conn, const struct bt_conn_auth_cb *cb)
+{
+	const struct bt_conn_auth_cb **conn_auth = &bt_auth_conn[bt_conn_index(conn)];
+
+	if (!cb) {
+		*conn_auth = NULL;
+		return 0;
+	}
+
+	if (*conn_auth) {
+		return -EALREADY;
+	}
+
+	/* The cancel callback must always be provided if the app provides
+	 * interactive callbacks.
+	 */
+	if (!cb->cancel &&
+	    (cb->passkey_display || cb->passkey_entry || cb->passkey_confirm ||
+#if defined(CONFIG_BT_BREDR)
+	     cb->pincode_entry ||
+#endif
+	     cb->pairing_confirm)) {
+		return -EINVAL;
+	}
+
+	*conn_auth = cb;
+	return 0;
+}
+
+#endif /* CONFIG_BT_SMP */
+
 int bt_conn_auth_info_cb_register(struct bt_conn_auth_info_cb *cb)
 {
 	CHECKIF(cb == NULL) {
@@ -2836,7 +2876,7 @@ int bt_conn_auth_info_cb_unregister(struct bt_conn_auth_info_cb *cb)
 
 int bt_conn_auth_passkey_entry(struct bt_conn *conn, unsigned int passkey)
 {
-	if (!bt_auth) {
+	if (!get_auth_cb(conn)) {
 		return -EINVAL;
 	}
 
@@ -2854,7 +2894,7 @@ int bt_conn_auth_passkey_entry(struct bt_conn *conn, unsigned int passkey)
 
 int bt_conn_auth_passkey_confirm(struct bt_conn *conn)
 {
-	if (!bt_auth) {
+	if (!get_auth_cb(conn)) {
 		return -EINVAL;
 	}
 
@@ -2873,7 +2913,7 @@ int bt_conn_auth_passkey_confirm(struct bt_conn *conn)
 
 int bt_conn_auth_cancel(struct bt_conn *conn)
 {
-	if (!bt_auth) {
+	if (!get_auth_cb(conn)) {
 		return -EINVAL;
 	}
 
@@ -2892,7 +2932,7 @@ int bt_conn_auth_cancel(struct bt_conn *conn)
 
 int bt_conn_auth_pairing_confirm(struct bt_conn *conn)
 {
-	if (!bt_auth) {
+	if (!get_auth_cb(conn)) {
 		return -EINVAL;
 	}
 
