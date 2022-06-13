@@ -350,6 +350,14 @@ int bt_ssp_start_security(struct bt_conn *conn)
 		return -ENOTSUP;
 	}
 
+	struct bt_conn_auth_info_cb *listener, *next;
+
+	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&bt_auth_info_cbs, listener, next, node) {
+		if (listener->pairing_start) {
+			listener->pairing_start(conn);
+		}
+	}
+
 	if (get_io_capa() == BT_IO_NO_INPUT_OUTPUT &&
 	    conn->required_sec_level > BT_SECURITY_L2) {
 		return -EINVAL;

@@ -3034,6 +3034,14 @@ static uint8_t smp_pairing_req(struct bt_smp *smp, struct net_buf *buf)
 		}
 	}
 
+	struct bt_conn_auth_info_cb *listener, *next;
+
+	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&bt_auth_info_cbs, listener, next, node) {
+		if (listener->pairing_start) {
+			listener->pairing_start(conn);
+		}
+	}
+
 	/* Store req for later use */
 	smp->preq[0] = BT_SMP_CMD_PAIRING_REQ;
 	memcpy(smp->preq + 1, req, sizeof(*req));
@@ -5654,6 +5662,14 @@ int bt_passkey_set(unsigned int passkey)
 
 int bt_smp_start_security(struct bt_conn *conn)
 {
+	struct bt_conn_auth_info_cb *listener, *next;
+
+	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&bt_auth_info_cbs, listener, next, node) {
+		if (listener->pairing_start) {
+			listener->pairing_start(conn);
+		}
+	}
+
 	switch (conn->role) {
 #if defined(CONFIG_BT_CENTRAL)
 	case BT_HCI_ROLE_CENTRAL:
