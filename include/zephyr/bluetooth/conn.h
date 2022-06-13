@@ -1314,6 +1314,16 @@ struct bt_conn_auth_cb {
 
 /** Authenticated pairing information callback structure */
 struct bt_conn_auth_info_cb {
+	/** @brief Notify that pairing procedure is about to start
+	 *
+	 *  This callback notifies the application that the pairing procedure
+	 *  is about to start. While handlign the callback, application can
+	 *  still update the Bluetooth authentication callbacks.
+	 *
+	 *  @param conn Connection object.
+	 */
+	void (*pairing_start)(struct bt_conn *conn);
+
 	/** @brief notify that pairing procedure was complete.
 	 *
 	 *  This callback notifies the application that the pairing procedure
