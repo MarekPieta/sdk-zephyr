@@ -2790,6 +2790,11 @@ const struct bt_conn_auth_cb *bt_conn_auth_cb_get(void)
 
 int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb)
 {
+	if (IS_ENABLED(CONFIG_BT_SMP) &&
+	    !bt_smp_auth_can_update_auth_cb()) {
+		return -EBUSY;
+	}
+
 	if (!cb) {
 		bt_auth = NULL;
 		return 0;
