@@ -139,7 +139,7 @@ void wrapper_input_report_done(const struct device *dev)
 	}
 
 	if (legacy_ops->int_in_ready) {
-		LOG_ERR("Input report done for %p", dev);
+		LOG_DBG("Input report done for %p", dev);
 		legacy_ops->int_in_ready(dev);
 	}
 }
