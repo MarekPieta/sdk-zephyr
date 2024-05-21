@@ -576,7 +576,7 @@ static void string_ascii7_to_utf16le(struct usbd_desc_node *const dn,
 		head.bLength = sizeof(head) + hwid_len * 2;
 		ascii7_str = hwid_sn;
 	} else {
-		head.bLength = dn->bLength,
+		head.bLength = dn->bLength;
 		ascii7_str = (uint8_t *)dn->ptr;
 	}
 
