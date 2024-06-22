@@ -144,6 +144,15 @@ programming scripts.
    jumper, then powering up the board.
 
 #. Run the ``program_CMSIS`` script.
+1. Make sure the LPCScrypt utility is present on your host machine. This can
+   be done by installing :ref:`linkserver-debug-host-tools`.
+
+#. Put the LPC-Link2 microcontroller into DFU boot mode by attaching the DFU
+   jumper, then connecting to the USB debug port on the board. This
+   jumper is connected to ``P2_6`` on the LPC4322 SOC.
+
+#. Run the ``program_CMSIS`` script, found in the installed LPCScrypt ``scripts``
+   folder.
 
 #. Remove the DFU jumper and power cycle the board.
 
@@ -169,6 +178,12 @@ programming scripts.
    jumper, then powering up the board.
 
 #. Run the ``program_JLINK`` script.
+#. Put the LPC-Link2 microcontroller into DFU boot mode by attaching the DFU
+   jumper, then connecting to the USB debug port on the board. This
+   jumper is connected to ``P2_6`` on the LPC4322 SOC.
+
+#. Run the ``program_JLINK`` script, found in the installed LPCScrypt ``scripts``
+   folder.
 
 #. Remove the DFU jumper and power cycle the board.
 
