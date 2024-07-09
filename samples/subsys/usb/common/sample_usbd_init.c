@@ -25,6 +25,10 @@ USBD_DESC_MANUFACTURER_DEFINE(sample_mfr, CONFIG_SAMPLE_USBD_MANUFACTURER);
 USBD_DESC_PRODUCT_DEFINE(sample_product, CONFIG_SAMPLE_USBD_PRODUCT);
 USBD_DESC_SERIAL_NUMBER_DEFINE(sample_sn);
 
+USBD_DESC_CONFIG_DEFINE(fs_cfg_desc, "FS Configuration");
+USBD_DESC_CONFIG_DEFINE(hs_cfg_desc, "HS Configuration");
+
+/* doc configuration instantiation start */
 static const uint8_t attributes = (IS_ENABLED(CONFIG_SAMPLE_USBD_SELF_POWERED) ?
 				   USB_SCD_SELF_POWERED : 0) |
 				  (IS_ENABLED(CONFIG_SAMPLE_USBD_REMOTE_WAKEUP) ?
@@ -32,11 +36,11 @@ static const uint8_t attributes = (IS_ENABLED(CONFIG_SAMPLE_USBD_SELF_POWERED) ?
 
 USBD_CONFIGURATION_DEFINE(sample_fs_config,
 			  attributes,
-			  CONFIG_SAMPLE_USBD_MAX_POWER);
+			  CONFIG_SAMPLE_USBD_MAX_POWER, &fs_cfg_desc);
 
 USBD_CONFIGURATION_DEFINE(sample_hs_config,
 			  attributes,
-			  CONFIG_SAMPLE_USBD_MAX_POWER);
+			  CONFIG_SAMPLE_USBD_MAX_POWER, &hs_cfg_desc);
 
 /*
  * This does not yet provide valuable information, but rather serves as an
