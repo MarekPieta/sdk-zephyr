@@ -59,27 +59,6 @@ config BUILD_OUTPUT_ADJUST_LMA
 
 endif # NXP_RW_ROM_RAMLOADER
 
-if FLASH_MCUX_FLEXSPI_XIP
-
-# Avoid RWW hazards by defaulting logging to disabled
-choice FLASH_LOG_LEVEL_CHOICE
-	default FLASH_LOG_LEVEL_OFF
-endchoice
-
-choice MEMC_LOG_LEVEL_CHOICE
-	default MEMC_LOG_LEVEL_OFF
-endchoice
-
-# Code relocation is needed when MEMC driver is enabled
-config CODE_DATA_RELOCATION_SRAM
-	default y if MEMC
-
-endif # FLASH_MCUX_FLEXSPI_XIP
-
-choice USB_MCUX_CONTROLLER_TYPE
-	default USB_DC_NXP_EHCI
-endchoice
-
 if BT
 
 config FLASH
