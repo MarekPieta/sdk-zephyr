@@ -52,6 +52,8 @@ LOG_MODULE_REGISTER(bt_conn);
 
 K_FIFO_DEFINE(free_tx);
 
+extern struct k_work_q bt_workq;
+
 static void tx_free(struct bt_conn_tx *tx);
 
 static void conn_tx_destroy(struct bt_conn *conn, struct bt_conn_tx *tx)
@@ -253,11 +255,32 @@ static void tx_free(struct bt_conn_tx *tx)
 	k_fifo_put(&free_tx, tx);
 }
 
-#if defined(CONFIG_BT_CONN_TX)
-static void tx_notify(struct bt_conn *conn)
+struct k_work_q *tx_notify_workqueue_get(void)
 {
-	__ASSERT_NO_MSG(k_current_get() ==
-			k_work_queue_thread_get(&k_sys_work_q));
+	if (IS_ENABLED(CONFIG_BT_RECV_WORKQ_BT)) {
+		return &bt_workq;
+	} else {
+		return &k_sys_work_q;
+	}
+}
+
+void bt_conn_tx_notify(struct bt_conn *conn, bool wait_for_completion)
+{
+#if defined(CONFIG_BT_CONN_TX)
+	if (k_current_get() != k_work_queue_thread_get(tx_notify_workqueue_get())) {
+		/* Ensure that function is called only from a single context. */
+		struct k_work_sync sync;
+		int err;
+
+		err = k_work_submit_to_queue(tx_notify_workqueue_get(),
+					     &conn->tx_complete_work);
+		__ASSERT(err >= 0, "couldn't submit (err %d)", err);
+
+		if (wait_for_completion) {
+			k_work_flush(&conn->tx_complete_work, &sync);
+		}
+		return;
+	}
 
 	LOG_DBG("conn %p", conn);
 
@@ -299,8 +322,8 @@ static void tx_notify(struct bt_conn *conn)
 		LOG_DBG("raise TX IRQ");
 		bt_tx_irq_raise();
 	}
-}
 #endif	/* CONFIG_BT_CONN_TX */
+}
 
 struct bt_conn *bt_conn_new(struct bt_conn *conns, size_t size)
 {
@@ -427,29 +450,6 @@ static void bt_acl_recv(struct bt_conn *conn, struct net_buf *buf,
 	bt_l2cap_recv(conn, buf, true);
 }
 
-static void wait_for_tx_work(struct bt_conn *conn)
-{
-#if defined(CONFIG_BT_CONN_TX)
-	LOG_DBG("conn %p", conn);
-
-	if (IS_ENABLED(CONFIG_BT_RECV_WORKQ_SYS) ||
-	    k_current_get() == k_work_queue_thread_get(&k_sys_work_q)) {
-		tx_notify(conn);
-	} else {
-		struct k_work_sync sync;
-		int err;
-
-		err = k_work_submit(&conn->tx_complete_work);
-		__ASSERT(err >= 0, "couldn't submit (err %d)", err);
-
-		k_work_flush(&conn->tx_complete_work, &sync);
-	}
-	LOG_DBG("done");
-#else
-	ARG_UNUSED(conn);
-#endif	/* CONFIG_BT_CONN_TX */
-}
-
 void bt_conn_recv(struct bt_conn *conn, struct net_buf *buf, uint8_t flags)
 {
 	/* Make sure we notify any pending TX callbacks before processing
@@ -458,7 +458,7 @@ void bt_conn_recv(struct bt_conn *conn, struct net_buf *buf, uint8_t flags)
 	 * Always do so from the same context for sanity. In this case that will
 	 * be the system workqueue.
 	 */
-	wait_for_tx_work(conn);
+	bt_conn_tx_notify(conn, true);
 
 	LOG_DBG("handle %u len %u flags %02x", conn->handle, buf->len, flags);
 
@@ -1202,7 +1202,7 @@ void bt_conn_set_state(struct bt_conn *conn, bt_conn_state_t state)
 		 */
 		switch (old_state) {
 		case BT_CONN_DISCONNECT_COMPLETE:
-			wait_for_tx_work(conn);
+			bt_conn_tx_notify(conn, true);
 
 			/* Cancel Connection Update if it is pending */
 			if ((conn->type == BT_CONN_TYPE_LE) &&
@@ -1590,7 +1590,11 @@ static void tx_complete_work(struct k_work *work)
 
 	LOG_DBG("conn %p", conn);
 
-	tx_notify(conn);
+	/* Ensure single execution context. */
+	__ASSERT_NO_MSG(k_current_get() ==
+			k_work_queue_thread_get(tx_notify_workqueue_get()));
+
+	bt_conn_tx_notify(conn, false);
 }
 #endif /* CONFIG_BT_CONN_TX */
 

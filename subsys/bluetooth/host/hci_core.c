@@ -80,7 +80,7 @@ void bt_tx_irq_raise(void);
 static void rx_work_handler(struct k_work *work);
 static K_WORK_DEFINE(rx_work, rx_work_handler);
 #if defined(CONFIG_BT_RECV_WORKQ_BT)
-static struct k_work_q bt_workq;
+struct k_work_q bt_workq;
 static K_KERNEL_STACK_DEFINE(rx_thread_stack, CONFIG_BT_RX_STACK_SIZE);
 #endif /* CONFIG_BT_RECV_WORKQ_BT */
 
@@ -584,7 +584,7 @@ static void hci_num_completed_packets(struct net_buf *buf)
 			atomic_dec(&conn->in_ll);
 
 			/* TX context free + callback happens in there */
-			k_work_submit(&conn->tx_complete_work);
+			bt_conn_tx_notify(conn, false);
 		}
 
 		bt_conn_unref(conn);
@@ -4338,7 +4338,7 @@ int bt_enable(bt_ready_cb_t cb)
 	k_work_queue_start(&bt_workq, rx_thread_stack,
 			   CONFIG_BT_RX_STACK_SIZE,
 			   K_PRIO_COOP(CONFIG_BT_RX_PRIO), NULL);
-	k_thread_name_set(&bt_workq.thread, "BT RX WQ");
+	k_thread_name_set(&bt_workq.thread, "BT WQ");
 #endif
 
 #if DT_HAS_CHOSEN(zephyr_bt_hci)
