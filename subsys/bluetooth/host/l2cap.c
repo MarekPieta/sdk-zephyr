@@ -274,6 +274,10 @@ static void l2cap_chan_del(struct bt_l2cap_chan *chan)
 	 */
 	while ((buf = k_fifo_get(&le_chan->tx_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
+		/* The feature might introduce an additional net buffer reference. */
+		if (IS_ENABLED(CONFIG_BT_ATT_SENT_CB_AFTER_TX) && buf->ref == 1) {
+			net_buf_unref(buf);
+		}
 	}
 
 	if (ops->disconnected) {
