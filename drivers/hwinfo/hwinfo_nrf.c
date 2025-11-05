@@ -106,6 +106,7 @@ int z_impl_hwinfo_get_reset_cause(uint32_t *cause)
 	}
 
 	if (reason & REASON_LOCKUP) {
+		printk("REASON_LOCKUP\n");
 		flags |= RESET_CPU_LOCKUP;
 	}
 
@@ -165,6 +166,7 @@ int z_impl_hwinfo_get_reset_cause(uint32_t *cause)
 		flags |= RESET_SOFTWARE;
 	}
 	if (reason & NRFX_RESET_REASON_LLOCKUP_MASK) {
+		printk("NRFX_RESET_REASON_LLOCKUP_MASK\n");
 		flags |= RESET_CPU_LOCKUP;
 	}
 	if (reason & NRFX_RESET_REASON_LDOG_MASK) {

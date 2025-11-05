@@ -222,6 +222,7 @@ static int write_op(void *context)
 	while (w_ctx->len > 0) {
 		len = (WRITE_BUFFER_MAX_SIZE < w_ctx->len) ? WRITE_BUFFER_MAX_SIZE : w_ctx->len;
 
+		LOG_ERR("%u", w_ctx->flash_addr);
 		rram_write(w_ctx->flash_addr, (const void *)w_ctx->data_addr, len);
 
 		shift_write_context(len, w_ctx);
